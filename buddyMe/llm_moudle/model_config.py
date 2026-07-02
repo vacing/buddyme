@@ -29,6 +29,12 @@ class ModelConfig:
             "api_model": "deepseek-v4-pro",
             "max_tokens": 393216
         },
+        "deepseek_flash": {
+            "api_key": os.environ.get("DEEPSEEK_API_KEY", ""),
+            "base_url": "https://api.deepseek.com/chat/completions",
+            "api_model": "deepseek-v4-flash",
+            "max_tokens": 393216
+        },
         "deepseek_code_plan": {
             "api_key": os.environ.get("DEEPSEEK_API_KEY", ""),
             "base_url": "https://api.deepseek.com/anthropic",
