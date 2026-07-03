@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 _DEBUG_ENABLED = os.environ.get("BUDDYME_HTTP_DEBUG", "").lower() in ("1", "true", "yes", "on")
 
 # 单次打印的最大字符数，超出部分自动截断
-_MAX_PRINT_LENGTH = 10000
+_MAX_PRINT_LENGTH = 100000
 
 # ===================== 对话级文件日志管理 =====================
 
