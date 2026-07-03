@@ -48,6 +48,7 @@ class AgentMain:
     def __init__(
         self,
         model_name: str = "glm",
+        sub_model_name: str = "glm",
         system_prompt: Optional[str] = None,
         data_dir: Optional[str] = None,
         workspace_dir: Optional[str] = None,
@@ -80,10 +81,10 @@ class AgentMain:
         # 创建主客户端
         self._client = self._create_client(model_name)
 
-        #子任务使用的模型（固定 GLM，不受主模型切换影响）
-        self._sub_client = basic_llm.create_client("sub_agent_code_plan" )
-        #心跳任务使用的模型（固定 GLM，不受主模型切换影响）
-        self._scheduled_sub_client = basic_llm.create_client("sub_agent_code_plan" )
+        #子任务使用的模型
+        self._sub_client = basic_llm.create_client(sub_model_name)
+        #心跳任务使用的模型
+        self._scheduled_sub_client = basic_llm.create_client(sub_model_name)
 
         #todo 未来可扩展为：规划阶段用强模型（glm），执行阶段用快模型（minimax）。
 

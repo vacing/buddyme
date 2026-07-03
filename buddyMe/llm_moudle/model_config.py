@@ -8,12 +8,12 @@ class ModelConfig:
         "sub_agent_code_plan": {
             "api_key": os.environ.get("GLM_API_KEY", ""),
             "base_url": "https://open.bigmodel.cn/api/anthropic",
-            "api_model": "glm-4.7",
-            "max_tokens": 390000
+            "api_model": "glm-5.1",
+            "max_tokens": 131072
         },
         "glm": {
             "api_key": os.environ.get("GLM_API_KEY", ""),
-            "base_url": "https://open.bigmodel.cn/api/coding/paas/v4/chat/completions",
+            "base_url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
             "api_model": "glm-5.1",
             "max_tokens": 131072
         },
@@ -21,7 +21,7 @@ class ModelConfig:
             "api_key": os.environ.get("GLM_API_KEY", ""),
             "base_url": "https://open.bigmodel.cn/api/anthropic",
             "api_model": "glm-5.1",
-            "max_tokens": 390000
+            "max_tokens": 131072
         },
         "deepseek": {
             "api_key": os.environ.get("DEEPSEEK_API_KEY", ""),

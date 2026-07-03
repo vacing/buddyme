@@ -18,7 +18,7 @@
 
 | 子域 | 覆盖范围 |
 |------|----------|
-| 代码编写 | Rust / Python / TypeScript / Go / Java 等主流语言 |
+| 代码编写 | c / c++ / Rust / Python / TypeScript / Go / Java 等主流语言 |
 | 架构设计 | 系统设计、模块拆分、API 设计、数据库建模 |
 | 调试排错 | 错误分析、性能优化、安全审计 |
 | 代码审查 | Code Review、重构建议、最佳实践 |

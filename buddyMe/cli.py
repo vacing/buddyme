@@ -1,5 +1,6 @@
 """buddyMe CLI 入口"""
 
+import argparse
 import os
 import queue
 import threading
@@ -50,17 +51,26 @@ def _invoke_with_spinner(ag: agent.AgentMain, user_input: str) -> str:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="buddyMe — 多模型智能体 + Skill")
+    parser.add_argument("--model", "-m", type=str, default=None,
+                        help="主模型名称（覆盖环境变量 BUDDYME_MODEL）")
+    parser.add_argument("--sub-model", "-s", type=str, default=None,
+                        help="子任务模型名称（覆盖环境变量 BUDDYME_SUB_MODEL）")
+    args = parser.parse_args()
+
     workspace_dir = Path.cwd()
-    model_name = os.environ.get("BUDDYME_MODEL", "glm_code_plan")
+    model_name = args.model or os.environ.get("BUDDYME_MODEL", "glm_code_plan")
+    sub_model_name = args.sub_model or os.environ.get("BUDDYME_SUB_MODEL", "glm_code_plan")
 
     console.print("=" * 60, style="bold green")
     console.print("buddyMe — 多模型智能体 + Skill", style="bold green")
     console.print(f"项目空间: {workspace_dir}", style="cyan")
     console.print(f"默认模型: {model_name}", style="dim")
+    console.print(f"子任务模型: {sub_model_name}", style="dim")
     console.print("输入 /help 查看可用命令", style="dim")
     console.print("=" * 60, style="bold green")
 
-    ag = agent.AgentMain(model_name=model_name, workspace_dir=str(workspace_dir))
+    ag = agent.AgentMain(model_name=model_name, sub_model_name=sub_model_name, workspace_dir=str(workspace_dir))
     ag.register_tool(BaiduSearchTool())
     ag.start_heartbeat()
 

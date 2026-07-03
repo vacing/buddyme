@@ -22,6 +22,9 @@ _MODEL_DEFAULTS = {
     "deepseek": {
         "thinking_disabled": True,
     },
+    "deepseek_flash": {
+        "thinking_disabled": True,
+    },
     "ernie": {
         "tool_choice": "auto",
     },
