@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from buddyMe.anthropic_standard.basic_anthropic_client import BaseLLMClient
+from buddyMe.utils.http_debug import http_debug_request, http_debug_response
 
 logger = logging.getLogger(__name__)
 
@@ -204,6 +205,16 @@ class AnthropicCodePlanClient(BaseLLMClient):
 
         for attempt in range(max_retries):
             try:
+                http_debug_request(
+                    method="POST",
+                    url=f"{self.base_url}/v1/messages",
+                    headers=headers,
+                    payload=payload,
+                    model_name=self.model_name,
+                )
+                import time as _time
+                _t0 = _time.monotonic()
+
                 response = await client.post(
                     f"{self.base_url}/v1/messages",
                     headers=headers,
@@ -211,6 +222,14 @@ class AnthropicCodePlanClient(BaseLLMClient):
                 )
                 response.raise_for_status()
                 result = response.json()
+
+                _elapsed = _time.monotonic() - _t0
+                http_debug_response(
+                    status_code=response.status_code,
+                    response_body=result,
+                    model_name=self.model_name,
+                    elapsed=_elapsed,
+                )
                 return self._parse_response(result)
 
             except httpx.HTTPStatusError as e:

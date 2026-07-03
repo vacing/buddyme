@@ -1,3 +1,6 @@
+test/*
+initspace/*
+vacing/*
 # Python
 __pycache__/
 *.py[cod]

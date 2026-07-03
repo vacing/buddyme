@@ -14,6 +14,7 @@ from buddyMe.initspace import todo_manager
 from buddyMe.initspace.skill_loader import SkillLoader
 from buddyMe.llm_moudle import basic_llm, model_config
 from buddyMe.utils.paths import get_package_dir, get_user_data_dir, get_workspace_dir, resolve_data_dir
+from buddyMe.utils.http_debug import set_log_dir, start_conversation, end_conversation
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -487,6 +488,10 @@ class AgentMain:
             self._last_cmd_should_exit = getattr(cmd_result, 'should_exit', False)
             return cmd_result.message
 
+        # HTTP 调试日志：每次对话生成唯一 ID，保存到 log/ 目录
+        set_log_dir(os.path.join(self._DATA_DIR, "log"))
+        start_conversation()
+
         self._used_tools = []
         self._used_skills = []
         self._written_files = []  # 重置文件追踪列表
@@ -540,6 +545,12 @@ class AgentMain:
                     c.close()
                 except Exception:
                     pass
+
+        # 结束本次对话的 HTTP 调试日志，如果写了日志文件则输出路径
+        log_path = end_conversation()
+        if log_path:
+            logger.info(f"[HTTP Debug] Log saved: {log_path}")
+            result += f"\n\n[HTTP Debug Log] {log_path}"
         return result
 
     def _track_usage(self, response: dict):
@@ -719,7 +730,7 @@ class AgentMain:
 
     async def _run_simple(self, user_input: str, conversation_context: str) -> str:
         """简单任务快速通道：单轮 LLM + 工具调用，跳过规划-拆解-合并"""
-        logger.info("[短路] 检测到简单任务，跳过规划阶段")
+        logger.warning("[短路] 检测到简单任务，跳过规划阶段")
 
         user_memory_context = self.user_memory.to_prompt()
         full_system = self.system_prompt + "\n\n" + user_memory_context
@@ -746,7 +757,7 @@ class AgentMain:
 
         tools = self._get_tool_schemas()
         full_text = ""
-        max_steps = 5  # 简单任务最多5步
+        max_steps = 10  # 简单任务最多10步
 
         for step in range(1, max_steps + 1):
             try:
@@ -833,6 +844,7 @@ class AgentMain:
         # ===== 简单任务短路 =====
         if self._is_simple_task(user_input):
             return await self._run_simple(user_input, conversation_context)
+        logger.warning("[规划] 检测到复杂任务，进入规划阶段")
 
         # ===== 阶段1：任务规划（最小 prompt） =====
         # 规划时也注入对话上下文，让任务分解能感知前文

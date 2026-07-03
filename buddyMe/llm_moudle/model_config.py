@@ -17,6 +17,18 @@ class ModelConfig:
             "api_model": "glm-5.1",
             "max_tokens": 131072
         },
+        "glm-4.6v": {
+            "api_key": os.environ.get("GLM_API_KEY", ""),
+            "base_url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+            "api_model": "glm-4.6v",
+            "max_tokens": 131072
+        },
+        "glm-4.5-air": {
+            "api_key": os.environ.get("GLM_API_KEY", ""),
+            "base_url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+            "api_model": "glm-4.5-air",
+            "max_tokens": 98304
+        },
         "glm_code_plan": {
             "api_key": os.environ.get("GLM_API_KEY", ""),
             "base_url": "https://open.bigmodel.cn/api/anthropic",

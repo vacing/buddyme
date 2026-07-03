@@ -102,6 +102,114 @@ flowchart LR
 
 复杂任务交给 LLM 分解为子任务列表，存入 `TodoManager`，同时创建 `subtask_results.json` 记录执行进度。
 
+#### TodoManager 任务管理器详解
+
+> 📄 源码：`buddyMe/initspace/todo_manager.py`
+
+**核心特征**：TodoManager 是智能体内部任务管理器，**对大语言模型不可见，不对外暴露为工具**。它是纯 Python 内部状态管理，LLM 看不到它，只能看到它 `render()` 出来的文本。
+
+**组成结构**：
+
+| 组件 | 类型 | 职责 |
+|------|------|------|
+| `plan_task()` | 模块级 async 函数 | 调用 LLM 分解任务，返回步骤列表 |
+| `TodoManager` | 类 | 管理子任务生命周期与状态流转 |
+
+#### `plan_task()` — 任务规划函数
+
+单独调用一次 LLM，按文件操作粒度分解任务：
+
+1. 构造 `plan_prompt`，要求 LLM 按文件操作粒度分解任务
+2. 每个步骤用标签标注类型：`[SEARCH]`/`[CREATE]`/`[EDIT]`/`[VERIFY]`/`[SKILL:xxx]`
+3. 最多 8 个步骤，简单任务不分解（直接返回原句）
+4. LLM 调用失败时降级为 `[user_input]`（只含原任务）
+
+**分解示例**：
+```
+用户: "帮我写一个 Python 脚本计算斐波那契数列"
+输出:
+  [CREATE] 创建斐波那契计算脚本文件，包含函数定义和基本结构
+  [EDIT] 向脚本中补充用户输入和输出逻辑
+  [VERIFY] 读取脚本文件，检查语法和逻辑正确性
+```
+
+#### `TodoManager` — 任务状态追踪器
+
+管理子任务的生命周期，三种状态流转：
+
+```mermaid
+flowchart LR
+    P["⬜ pending<br/>待处理"] -->|"create_from_plan<br/>自动激活第一个"| IP["🔄 in_progress<br/>进行中"]
+    IP -->|"mark_current_done<br/>完成后自动激活下一个"| C["✅ completed<br/>已完成"]
+    C -->|"全部完成"| DONE["返回 None"]
+```
+
+**核心方法**：
+
+| 方法 | 作用 |
+|------|------|
+| `create_from_plan(plan)` | 接收步骤列表，初始化待办清单，自动将第一个设为 `in_progress` |
+| `mark_current_done()` | 将当前 `in_progress` 标记为 `completed`，自动激活下一个 `pending` |
+| `render()` | 渲染为带 Emoji 图标的可读文本，注入到 LLM 上下文中 |
+| `is_empty()` | 检查是否还有待办任务 |
+| `_get_in_progress()` | 内部方法，查找当前进行中的任务 |
+
+**`render()` 输出示例**：
+```markdown
+## 当前任务计划
+  🔄 [1] [CREATE] 创建斐波那契计算脚本文件 (in_progress)
+  ⬜ [2] [EDIT] 向脚本中补充用户输入和输出逻辑 (pending)
+  ⬜ [3] [VERIFY] 读取脚本文件，检查语法正确性 (pending)
+  进度: 0/3
+```
+
+#### 在 Agent 中的调用时序
+
+```mermaid
+sequenceDiagram
+    participant Agent as AgentMain
+    participant Plan as plan_task()
+    participant Todo as TodoManager
+    participant LLM as 子任务LLM
+
+    Agent->>Plan: plan_task(user_input, client, skill_metadata)
+    Plan->>LLM: "分解这个任务..."
+    LLM-->>Plan: ["[CREATE]...", "[EDIT]...", "[VERIFY]..."]
+    Plan-->>Agent: 步骤列表
+
+    Agent->>Todo: create_from_plan(plans)
+    Todo-->>Agent: 渲染的任务清单
+
+    loop 每个子任务
+        Agent->>Todo: render() → 注入到子任务 system prompt
+        Agent->>LLM: 执行当前子任务
+        LLM-->>Agent: 子任务结果
+        Agent->>Todo: mark_current_done()
+        Note over Todo: 当前→completed, 下一个→in_progress
+    end
+```
+
+**Agent 中的关键代码位置**（`agent.py`）：
+
+| 行号 | 调用 | 说明 |
+|------|------|------|
+| 188 | `TodoManager()` | 初始化任务管理器 |
+| 842 | `plan_task(...)` | 调用 LLM 分解任务 |
+| 847 | `create_from_plan(plans)` | 创建待办清单 |
+| 864-866 | 遍历 `items` | 逐个执行子任务 |
+| 1081 | `mark_current_done()` | 子任务完成后更新状态 |
+
+#### 设计要点
+
+| 特性 | 说明 |
+|------|------|
+| **LLM 不可见** | 不作为工具暴露给 LLM，纯内部状态管理 |
+| **标签分类** | 子任务带 `[SEARCH]`/`[CREATE]`/`[EDIT]`/`[VERIFY]` 标签，Agent 据此分配不同工具集 |
+| **技能对齐** | 分解时参考已有 Skill，匹配到的步骤用 `[SKILL:技能名]` 标注 |
+| **自动流转** | `mark_current_done()` 自动完成→激活下一个，无需手动管理 |
+| **进度可视化** | `render()` 输出带 Emoji 的进度条，注入 LLM 上下文使其"感知"整体进度 |
+| **降级保护** | LLM 规划失败时降级为单任务 `[user_input]`，不阻断流程 |
+
 ### 阶段 2：子任务执行 (`_run_sub_task`)
 
 每个子任务使用**独立的局部 `task_messages`**，不追加到 `self.messages`。子任务类型分类：

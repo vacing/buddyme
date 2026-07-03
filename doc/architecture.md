@@ -141,3 +141,4 @@ Agent 从用户输入到最终输出经历三个阶段：
 | [心跳定时任务详解](heartbeat.md) | 心跳用途、工作机制、执行流程、Loop Skill确定性回放、用户交互方式 |
 | [模型 API Key 配置](model-apikey.md) | 5大模型系列环境变量映射、4种配置方式、共享API Key的模型列表 |
 | [命令行参数配置](cli-params.md) | --model/--sub-model参数说明、优先级规则、入口文件对应关系 |
+| [OpenAI 协议详解](openai-protocol.md) | 请求参数、消息格式、工具调用规范、响应结构、多轮对话关联与历史传递、Anthropic协议差异对照 |

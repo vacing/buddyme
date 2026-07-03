@@ -22,6 +22,8 @@ import asyncio
 import os
 # 日志模块
 import logging
+# HTTP 调试打印工具
+from buddyMe.utils.http_debug import http_debug_request, http_debug_response
 
 
 # ===================== 日志初始化 =====================
@@ -308,9 +310,27 @@ class OpenAICompatibleClient(BaseLLMClient):
 
         for attempt in range(max_retries):
             try:
+                http_debug_request(
+                    method="POST",
+                    url=self.base_url,
+                    headers=headers,
+                    payload=payload,
+                    model_name=self.model_name,
+                )
+                import time as _time
+                _t0 = _time.monotonic()
+
                 response = await client.post(self.base_url, headers=headers, json=payload)
                 response.raise_for_status()
                 result = response.json()
+
+                _elapsed = _time.monotonic() - _t0
+                http_debug_response(
+                    status_code=response.status_code,
+                    response_body=result,
+                    model_name=self.model_name,
+                    elapsed=_elapsed,
+                )
                 return self._parse_response(result)
 
             except httpx.HTTPStatusError as e:
