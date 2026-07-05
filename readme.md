@@ -68,7 +68,27 @@ pip install -e .
 
 ## 配置
 
-### 1. 创建环境变量文件
+### 1. 必需的 API Key
+
+项目运行需要至少配置一个大模型 API Key。以下是支持的 API Key 列表：
+
+#### 🔑 核心大模型 API Key（至少配置一个）
+
+| API Key | 环境变量名 | 服务商 | 获取地址 | 用途 |
+|---------|-----------|--------|----------|------|
+| **智谱GLM** | `GLM_API_KEY` | 智谱AI | [智谱开放平台](https://open.bigmodel.cn/) | 默认主模型和子任务模型 |
+| **DeepSeek** | `DEEPSEEK_API_KEY` | DeepSeek | [DeepSeek控制台](https://platform.deepseek.com/) | 高性能模型选项 |
+| **百度千帆ERNIE** | `ERNIE_API_KEY` | 百度 | [百度千帆](https://console.bce.baidu.com/qianfan/) | 文心大模型 |
+| **小米MIMO** | `XIAOMI_API_KEY` | 小米 | [小米MIMO](https://mimo.xiaomi.com/) | 小米大模型 |
+| **阿里通义千问** | `QWEN_API_KEY` | 阿里云 | [阿里云百炼](https://bailian.console.aliyun.com/) | 阿里云大模型 |
+
+#### 🔍 工具类 API Key
+
+| API Key | 环境变量名 | 服务商 | 获取地址 | 用途 |
+|---------|-----------|--------|----------|------|
+| **百度搜索** | `BAIDU_SEARCH_API_KEY` | 百度 | [百度千帆AI Search](https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application) | 网络搜索功能 |
+
+### 2. 创建环境变量文件
 
 在项目根目录创建 `.env` 文件，填入你的 API Key：
 
@@ -79,27 +99,54 @@ cp .env.example .env
 `.env` 内容示例：
 
 ```env
-GLM_API_KEY=your_glm_api_key
-DEEPSEEK_API_KEY=your_deepseek_api_key
-ERNIE_API_KEY=your_ernie_api_key
-XIAOMI_API_KEY=your_xiaomi_api_key
-QWEN_API_KEY=your_qwen_api_key
+# 必需：至少配置一个大模型 API Key
+GLM_API_KEY=your_glm_api_key_here
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+ERNIE_API_KEY=your_ernie_api_key_here
+XIAOMI_API_KEY=your_xiaomi_api_key_here
+QWEN_API_KEY=your_qwen_api_key_here
+
+# 必需：百度搜索功能
+BAIDU_SEARCH_API_KEY=your_baidu_search_api_key_here
 ```
 
-只需配置你实际使用的模型对应的 Key，其余可留空。
+**注意：** 只需配置你实际使用的模型对应的 Key，其余可留空。但至少需要一个大模型 API Key 和百度搜索 API Key。
 
-### 2. 环境变量（可选）
+### 2. 模型选择指南
+
+#### 默认配置
+- **主模型**: `glm_code_plan` (智谱GLM代码规划专用)
+- **子任务模型**: `glm_code_plan` (智谱GLM代码规划专用)
+
+#### 推荐模型组合
+
+| 使用场景 | 主模型 | 子任务模型 | 说明 |
+|----------|--------|------------|------|
+| **代码开发** | `glm_code_plan` | `glm_code_plan` | 代码规划能力强，适合复杂编程任务 |
+| **通用对话** | `glm` | `glm` | 平衡性能与成本，日常对话 |
+| **高性能需求** | `deepseek` | `deepseek_flash` | DeepSeek专业版+快速版组合 |
+| **长文本处理** | `deepseek_code_plan` | `deepseek_code_plan` | 96万Token上下文，超长文档处理 |
+
+#### 模型特点对比
+
+| 模型 | 上下文长度 | 代码能力 | 推理能力 | 成本 |
+|------|-----------|----------|----------|------|
+| `glm_code_plan` | 39万 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | 中等 |
+| `deepseek` | 39万 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 较高 |
+| `deepseek_code_plan` | 96万 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 高 |
+| `glm` | 13万 | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | 低 |
+| `ernie` | 6.5万 | ⭐⭐⭐ | ⭐⭐⭐⭐ | 低 |
+
+### 3. 环境变量（可选）
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
 | `BUDDYME_MODEL` | 默认模型名称 | `glm_code_plan` |
+| `BUDDYME_SUB_MODEL` | 子任务模型名称 | `glm_code_plan` |
 | `BUDDYME_HOME` | 用户数据目录 | `~/.buddyme/` |
 | `BUDDYME_WORKSPACE` | 工作区目录 | 当前目录 |
 
-## 快速开始
-
-### CLI 模式
-先导入脚本地址到环境，即把Scripts目录加到PATH：
+## 快速开始先导入脚本地址到环境，即把Scripts目录加到PATH：
 ```bash
 set PATH=%PATH%;C:\Users\yourname\AppData\Roaming\Python\Python313\Scripts
 buddyme

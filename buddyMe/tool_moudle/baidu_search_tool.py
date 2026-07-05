@@ -60,6 +60,8 @@ class BaiduSearchTool(BaseTool):
             }
         )
         self._api_key = api_key or os.environ.get("BAIDU_SEARCH_API_KEY", "")
+        if not self._api_key:
+            assert False, "请设置环境变量 BAIDU_SEARCH_API_KEY"
 
     async def execute(self, query: str) -> str:
         """执行百度搜索
